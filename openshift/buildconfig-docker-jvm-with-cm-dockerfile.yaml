@@ -1,0 +1,31 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: random-integers
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: random-integers-docker-jvm
+spec:
+  source:
+    type: Git
+    git:
+      uri: git@github.com:jamie-burns0/random-integers.git
+      ref: main
+    sourceSecret:
+      name: github-ssh
+    configMaps:
+      - configMap:
+          name: random-integers-dockerfile-jvm
+        destinationDir: devops
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: devops/Dockerfile.jvm
+  output:
+    to:
+      kind: ImageStreamTag
+      name: random-integers:docker-jvm
+  triggers:
+    - type: ConfigChange

@@ -1,0 +1,35 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: random-integers
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: random-integers-docker-jvm
+spec:
+  source:
+    type: Git
+    git:
+      uri: git@github.com:jamie-burns0/random-integers.git
+      ref: main
+    sourceSecret:
+      name: github-ssh
+    dockerfile: |
+      FROM registry.access.redhat.com/ubi9/openjdk-21:latest as builder
+      COPY --chown=default . .
+      RUN mvn clean package
+
+      FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
+      COPY --from=builder /home/default/target/quarkus-app ./quarkus-app
+      WORKDIR ./quarkus-app
+      CMD ["java", "-jar", "quarkus-run.jar"]
+  strategy:
+    type: Docker
+    dockerStrategy: {}
+  output:
+    to:
+      kind: ImageStreamTag
+      name: random-integers:docker-jvm
+  triggers:
+    - type: ConfigChange

@@ -1,0 +1,36 @@
+# Our openshift docker strategy build expects this to be in the application git 
+# repository. Since we consider this a devops file, we need a way to provide it
+# to our buildconfig.
+#
+# Whenever we update this file, either provide it
+#
+# inline to our buildconfig
+# - see ../openshift/buildconfig-docker-jvm-with-inline-dockerfile.yaml
+#
+# Or, as a mounted configmap
+# - see openshift/buildconfig-docker-jvm-with-cm-dockerfile.yaml
+# - oc create cm random-integers-dockerfile-jvm --from-file=/path/to/container/Dockerfile.jvm
+# - oc label cm random-integers-dockerfile-jvm app=random-integers-docker-jvm
+#
+# TODO: both solutions are brittle. Is there another way?
+
+FROM registry.access.redhat.com/ubi9/openjdk-21:latest as builder
+
+COPY --chown=default . .
+
+# RUN whoami && pwd && ls -lart .
+
+RUN mvn clean package
+  
+# RUN ls -lart ./target
+
+
+FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
+
+# RUN whoami && pwd && ls -lart .
+
+COPY --from=builder /home/default/target/quarkus-app ./quarkus-app
+
+WORKDIR ./quarkus-app
+
+CMD ["java", "-jar", "quarkus-run.jar"]
