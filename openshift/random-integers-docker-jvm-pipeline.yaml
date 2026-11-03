@@ -23,6 +23,10 @@ spec:
     type: string
     description: path to our dockerfile
     default: openshift/Dockerfile.jvm
+  - name: local-appname
+    type: string
+    description: name of the deployed app, service and route
+    default: random-integers-docker-jvm
   tasks:
 
   - name: fetch
@@ -83,27 +87,26 @@ spec:
         value: task
       - name: namespace
         value: openshift-pipelines
-      - name: local-appname
-        value: random-integers-docker-jvm
     runAfter:
     - build
     params:
     - name: SCRIPT
       value: |
-        oc create deployment $(params.local-appname) \
+        APP=$(params.local-appname) \
+        oc create deployment $APP \
           --image=$(tasks.build.results.IMAGE_URL)@$(tasks.build.results.IMAGE_DIGEST) \
           --dry-run=client -o yaml | oc apply -f -
-        oc set probe deploy/$(params.local-appname) --readiness \
+        oc set probe deploy/$APP --readiness \
           --get-url=http://:8080/q/health/ready \
           --initial-delay-seconds=2 --period-seconds=30
-        oc set probe deploy/$(params.local-appname) --liveness \
+        oc set probe deploy/$APP --liveness \
           --get-url=http://:8080/q/health/live \
           --initial-delay-seconds=2 --period-seconds=30          
-        oc rollout status deploy/$(params.local-appname)
-        oc create service clusterip $(params.local-appname) \
+        oc rollout status deploy/$APP
+        oc create service clusterip $APP \
           --tcp=8080:8080 --dry-run=client -o yaml | oc apply -f -
-        oc create route edge $(params.local-appname) \
-          --service=$(params.local-appname) \
+        oc create route edge $APP \
+          --service=$APP \
           --insecure-policy=Redirect \
           --dry-run=client -o yaml | oc apply -f -
     
