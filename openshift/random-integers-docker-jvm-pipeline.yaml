@@ -83,25 +83,27 @@ spec:
         value: task
       - name: namespace
         value: openshift-pipelines
+      - name: local-appname
+        value: random-integers-docker-jvm
     runAfter:
     - build
     params:
     - name: SCRIPT
       value: |
-        oc create deployment random-integers-docker-jvm \
+        oc create deployment $(params.local-appname) \
           --image=$(tasks.build.results.IMAGE_URL)@$(tasks.build.results.IMAGE_DIGEST) \
           --dry-run=client -o yaml | oc apply -f -
-        oc set probe deploy/random-integers-docker-jvm --readiness \
+        oc set probe deploy/$(params.local-appname) --readiness \
           --get-url=http://:8080/q/health/ready \
           --initial-delay-seconds=2 --period-seconds=30
-        oc set probe deploy/random-integers-docker-jvm --liveness \
+        oc set probe deploy/$(params.local-appname) --liveness \
           --get-url=http://:8080/q/health/live \
           --initial-delay-seconds=2 --period-seconds=30          
-        oc rollout status deploy/random-integers-docker-jvm
-        oc create service clusterip random-integers-docker-jvm \
+        oc rollout status deploy/$(params.local-appname)
+        oc create service clusterip $(params.local-appname) \
           --tcp=8080:8080 --dry-run=client -o yaml | oc apply -f -
-        oc create route edge random-integers-docker-jvm \
-          --service=random-integers-docker-jvm \
+        oc create route edge $(params.local-appname) \
+          --service=$(params.local-appname) \
           --insecure-policy=Redirect \
           --dry-run=client -o yaml | oc apply -f -
     
