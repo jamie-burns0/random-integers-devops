@@ -99,11 +99,10 @@ spec:
           --initial-delay-seconds=2 --period-seconds=30          
         oc rollout status deploy/random-integers-docker-jvm
         oc create service clusterip random-integers-docker-jvm \
-          --tcp=8080:8080,8443:8443 --dry-run=client -o yaml | oc apply -f -
-        oc expose svc random-integers-docker-jvm \
-          --dry-run=client -o yaml | oc apply -f -
-        oc create route edge random-integers-docker-jvm-secure \
+          --tcp=8080:8080 --dry-run=client -o yaml | oc apply -f -
+        oc create route edge random-integers-docker-jvm \
           --service=random-integers-docker-jvm \
+          --insecure-policy=Redirect \
           --dry-run=client -o yaml | oc apply -f -
     
     
