@@ -92,7 +92,7 @@ spec:
     params:
     - name: SCRIPT
       value: |
-        APP=$(params.local-appname) \
+        APP=$(params.local-appname)
         oc create deployment $APP \
           --image=$(tasks.build.results.IMAGE_URL)@$(tasks.build.results.IMAGE_DIGEST) \
           --dry-run=client -o yaml | oc apply -f -
