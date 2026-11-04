@@ -7,6 +7,10 @@ spec:
   workspaces:
   - name: workspace
   params:
+  - name: local-appname
+    type: string
+    description: name of the deployed app, service and route
+    default: random-integers-docker-jvm
   - name: git-url
     type: string
     description: git url of our project
@@ -18,15 +22,11 @@ spec:
   - name: image
     type: string
     description: name of our image
-    default: default-route-openshift-image-registry.apps.rm2.thpm.p1.openshiftapps.com/jamie-burns0-dev/random-integers-docker-jvm:latest
+    default: default-route-openshift-image-registry.apps.rm2.thpm.p1.openshiftapps.com/jamie-burns0-dev/$(params.local-appname):latest
   - name: dockerfile
     type: string
     description: path to our dockerfile
-    default: openshift/Dockerfile.jvm
-  - name: local-appname
-    type: string
-    description: name of the deployed app, service and route
-    default: random-integers-docker-jvm
+    default: src/main/docker/Dockerfile.jvm
   tasks:
 
   - name: fetch
